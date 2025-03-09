@@ -1,0 +1,33 @@
+{
+    "name": "jhavens/streamfilters",
+    "type": "library",
+    "version": "0.1.0",
+    "autoload": {
+        "psr-4": {
+            "Jhavens\\Streamfilters\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Jhavens\\Streamfilters\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Jonathan Havens",
+            "email": "mail@jhavens.tech"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "illuminate/support": "^12.1",
+        "illuminate/process": "^12.1",
+        "illuminate/container": "^12.1",
+        "symfony/filesystem": "^7.2"
+    },
+    "require-dev": {
+        "symfony/var-dumper": "^7.2",
+        "spatie/ray": "^1.41",
+        "phpunit/phpunit": "^12.0"
+    }
+}
