@@ -7,12 +7,12 @@
     },
     "autoload": {
         "psr-4": {
-            "Jhavens\\Streamfilters\\": "src/"
+            "Jhavens\\StreamFilters\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "Jhavens\\Streamfilters\\Tests\\": "tests/"
+            "Jhavens\\StreamFilters\\Tests\\": "tests/"
         }
     },
     "authors": [

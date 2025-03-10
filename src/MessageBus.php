@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\Filters;
+namespace Jhavens\StreamFilters;
 
 use SplObserver;
 use SplSubject;

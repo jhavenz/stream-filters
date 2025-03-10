@@ -2,11 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\Filters;
+namespace Jhavens\StreamFilters;
 
-use Jhavens\Streamfilters\Container\Container;
-use Jhavens\Streamfilters\Routing\SimpleJsonRouter;
-use Jhavens\Streamfilters\Streams\StreamFilterRegistry;
+use Jhavens\StreamFilters\Container\Container;
+use Jhavens\StreamFilters\Streams\StreamFilterRegistry;
 
 trait FilterProcessor
 {

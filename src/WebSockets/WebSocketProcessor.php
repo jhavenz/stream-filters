@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\Filters\WebSockets;
+namespace Jhavens\StreamFilters\WebSockets;
 
-use Jhavens\Streamfilters\Filters\FilterProcessor;
+use Jhavens\StreamFilters\FilterProcessor;
 use RuntimeException;
 
 class WebSocketProcessor

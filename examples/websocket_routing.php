@@ -2,9 +2,9 @@
 
 require __DIR__ . '/../vendor/autoload.php';
 
-use Jhavens\Streamfilters\Container\Container;
-use Jhavens\Streamfilters\Filters\WebSockets\WebSocketProcessor;
-use Jhavens\Streamfilters\Routing\SimpleJsonRouter;
+use Jhavens\StreamFilters\Container\Container;
+use Jhavens\StreamFilters\SimpleJsonRouter;
+use Jhavens\StreamFilters\WebSockets\WebSocketProcessor;
 
 $app = Container::getInstance(dirname(__DIR__));
 

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\Filters\Csv;
+namespace Jhavens\StreamFilters\Csv;
 
 use RuntimeException;
 

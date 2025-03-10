@@ -2,20 +2,23 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\Container;
+namespace Jhavens\StreamFilters\Container;
 
 use ArrayAccess;
 use Illuminate\Contracts\Container\Container as IlluminateContainer;
 use Illuminate\Process\Factory as ProcessFactory;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Traits\ForwardsCalls;
-use Jhavens\Streamfilters\Filters\CustomStreamFilter;
-use Jhavens\Streamfilters\Filters\MessageBus;
-use Jhavens\Streamfilters\Filters\WebSockets\WebSocketProcessor;
-use Jhavens\Streamfilters\Filters\WebSockets\WebSocketStreamWrapper;
-use Jhavens\Streamfilters\Routing\SimpleJsonRouter;
-use Jhavens\Streamfilters\Streams\StreamFilterRegistry;
+use Jhavens\StreamFilters\CustomStreamFilter;
+use Jhavens\StreamFilters\IStreamProcessor;
+use Jhavens\StreamFilters\MessageBus;
+use Jhavens\StreamFilters\PhpAttributes\StreamFilter;
+use Jhavens\StreamFilters\SimpleJsonRouter;
+use Jhavens\StreamFilters\Streams\StreamFilterRegistry;
+use Jhavens\StreamFilters\WebSockets\WebSocketProcessor;
+use Jhavens\StreamFilters\WebSockets\WebSocketStreamWrapper;
 use Psr\Container\ContainerInterface;
+use ReflectionClass;
 use Symfony\Component\Filesystem\Path;
 
 /**
@@ -87,6 +90,25 @@ class Container implements ArrayAccess, ContainerInterface
         $this->container->scopedIf(MessageBus::class);
         $this->container->scopedIf(SimpleJsonRouter::class);
         $this->container->scopedIf(StreamFilterRegistry::class);
+
+        $this->container->afterResolving(IStreamProcessor::class, function (IStreamProcessor $filter, Container $ioc) {
+            $reflection = new ReflectionClass($this);
+
+            foreach ($reflection->getMethods() as $method) {
+                $attributes = $method->getAttributes(StreamFilter::class);
+
+                if ($attributes) {
+                    $registry = $ioc->make(StreamFilterRegistry::class);
+
+                    $attr = $attributes[0]->newInstance();
+
+                    $registry->register(
+                        $attr->name,
+                        fn ($in, $out, &$consumed, $closing) => $this->{$method->name}($in, $out, $consumed, $closing)
+                    );
+                }
+            }
+        });
     }
 
     public function get(string $id)

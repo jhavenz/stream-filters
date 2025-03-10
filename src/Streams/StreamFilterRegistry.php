@@ -2,22 +2,32 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\Streams;
+namespace Jhavens\StreamFilters\Streams;
 
+use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Jhavens\Streamfilters\Filters\CustomStreamFilter;
+use Jhavens\StreamFilters\CustomStreamFilter;
 
 class StreamFilterRegistry
 {
     private array $filters = [];
 
-    public function register(string $name, callable $callback): static
+    public function register(string $name, callable $callback, bool $override = false): static
     {
-        stream_filter_register($name = "custom.{$name}", CustomStreamFilter::class);
+        $filterName = Str::start(trim($name, '.'), "custom.");
+        
+        if ($override || !array_key_exists($filterName, $this->filters)) {
+            stream_filter_register($filterName, CustomStreamFilter::class);
 
-        $this->filters[$name] = $callback;
+            $this->filters[$filterName] = $callback;
+        }
 
         return $this;
+    }
+
+    public function override(string $name, callable $callback): static
+    {
+        return $this->register($name, $callback, true);
     }
 
     public function apply(string $name, $stream): static

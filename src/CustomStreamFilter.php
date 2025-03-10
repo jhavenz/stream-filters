@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\Filters;
+namespace Jhavens\StreamFilters;
 
 use Illuminate\Container\Container;
-use Jhavens\Streamfilters\Streams\StreamFilterRegistry;
+use Jhavens\StreamFilters\Streams\StreamFilterRegistry;
 use php_user_filter;
 
 class CustomStreamFilter extends php_user_filter

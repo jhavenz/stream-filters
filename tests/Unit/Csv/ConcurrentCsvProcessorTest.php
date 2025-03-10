@@ -2,11 +2,11 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\Tests\Unit\Csv;
+namespace Jhavens\StreamFilters\Tests\Unit\Csv;
 
-use Jhavens\Streamfilters\Filters\Csv\ConcurrentCsvProcessor;
-use Jhavens\Streamfilters\Filters\MessageBus;
-use Jhavens\Streamfilters\Tests\TestCase;
+use Jhavens\StreamFilters\Csv\ConcurrentCsvProcessor;
+use Jhavens\StreamFilters\MessageBus;
+use Jhavens\StreamFilters\Tests\TestCase;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -16,16 +16,16 @@ class ConcurrentCsvProcessorTest extends TestCase
     #[Test]
     public function it_uses_trim_stream_filter ()
     {
-        $processor = $this->app[ConcurrentCsvProcessor::class];
+        $processor = $this->app->make(ConcurrentCsvProcessor::class);
 
         $inputFile = $this->csvPath('input.csv');
         $outputFile = $this->outputDir('output.csv');
-        $processor->process($inputFile, $outputFile, ['trim']);
+        $processor->process([$inputFile], $outputFile, ['trim']);
 
         $expectedFileContent = "name,age,city
-        Alice,30,New York
-        Bob,25,Los Angeles
-        ";
+Alice,30,New York
+Bob,25,Los Angeles
+";
 
         Assert::assertStringEqualsFileCanonicalizing(
             $outputFile,

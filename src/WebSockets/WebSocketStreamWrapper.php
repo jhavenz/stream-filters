@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\Filters\WebSockets;
+namespace Jhavens\StreamFilters\WebSockets;
 
 #[\AllowDynamicProperties]
 class WebSocketStreamWrapper

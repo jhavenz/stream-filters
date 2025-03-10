@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\Tests\Architecture;
+namespace Jhavens\StreamFilters\Tests\Architecture;
 
 use Illuminate\Support\Facades\Process;
-use Jhavens\Streamfilters\Tests\TestCase;
+use Jhavens\StreamFilters\Tests\TestCase;
 use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\Assert as PHPUnit;
 use PHPUnit\Framework\Attributes\Test;

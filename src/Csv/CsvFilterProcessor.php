@@ -2,14 +2,16 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\Filters\Csv;
+namespace Jhavens\StreamFilters\Csv;
 
-use Jhavens\Streamfilters\Filters\FilterProcessor;
-use Jhavens\Streamfilters\PhpAttributes\StreamFilter;
+use Jhavens\StreamFilters\FilterProcessor;
+use Jhavens\StreamFilters\IStreamProcessor;
+use Jhavens\StreamFilters\PhpAttributes\StreamFilter;
 use ReflectionClass;
 use SplObserver;
+use SplSubject;
 
-class CsvFilterProcessor implements SplObserver
+class CsvFilterProcessor implements SplObserver, IStreamProcessor
 {
     use FilterProcessor;
 
@@ -20,7 +22,7 @@ class CsvFilterProcessor implements SplObserver
         $this->messageBus()->attach($this);
     }
 
-    public function update(\SplSubject $subject): void
+    public function update(SplSubject $subject): void
     {
         if ($subject->getMessage() === 'change_trim_chars') {
             $this->trimChars = $subject->getData() ?? $this->trimChars;
@@ -49,7 +51,7 @@ class CsvFilterProcessor implements SplObserver
         return PSFS_PASS_ON;
     }
 
-    private function registerFilters(): void
+    public function registerFilters(): void
     {
         $reflection = new ReflectionClass($this);
         foreach ($reflection->getMethods() as $method) {

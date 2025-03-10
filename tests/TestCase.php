@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\Tests;
+namespace Jhavens\StreamFilters\Tests;
 
-use Jhavens\Streamfilters\Container\Container;
+use Jhavens\StreamFilters\Container\Container;
 use PHPUnit\Framework\TestCase as PHPUnitTestCase;
 
 class TestCase extends PHPUnitTestCase

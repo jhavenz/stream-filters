@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\Routing;
+namespace Jhavens\StreamFilters;
 
 interface MessageRouter
 {

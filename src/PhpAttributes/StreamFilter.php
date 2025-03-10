@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace Jhavens\Streamfilters\PhpAttributes;
+namespace Jhavens\StreamFilters\PhpAttributes;
 
 use Attribute;
 
