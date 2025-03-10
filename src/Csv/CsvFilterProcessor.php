@@ -7,7 +7,6 @@ namespace Jhavens\StreamFilters\Csv;
 use Jhavens\StreamFilters\FilterProcessor;
 use Jhavens\StreamFilters\IStreamProcessor;
 use Jhavens\StreamFilters\PhpAttributes\StreamFilter;
-use ReflectionClass;
 use SplObserver;
 use SplSubject;
 
@@ -16,6 +15,8 @@ class CsvFilterProcessor implements SplObserver, IStreamProcessor
     use FilterProcessor;
 
     private string $trimChars = " \t\n\r\0\x0B"; // Default trim characters
+
+    private array $headers = [];
 
     public function __construct(
     ) {
@@ -27,6 +28,29 @@ class CsvFilterProcessor implements SplObserver, IStreamProcessor
         if ($subject->getMessage() === 'change_trim_chars') {
             $this->trimChars = $subject->getData() ?? $this->trimChars;
         }
+    }
+
+    // headers filter
+    #[StreamFilter('headers')]
+    public function headersFilter($in, $out, &$consumed, $closing): int
+    {
+        while ($bucket = stream_bucket_make_writeable($in)) {
+            $data = $bucket->data;
+            // if headers are set, remove them from the data
+            // then add a final task to the stream to prepend the headers
+            preg_match('/[^name\s?+,age\s?+,city\s?+\n$]/mi', $data, $matches);
+            if ($this->headers) {
+                $lineContent = implode(",", $this->headers);
+                $lineContentEscaped = preg_quote($lineContent, "/");
+                $withoutHeaders = preg_replace("/^{$lineContentEscaped}\n/im", '', $data);
+
+                $bucket->data = $withoutHeaders;
+                $consumed += $bucket->datalen;
+                stream_bucket_append($out, $bucket);
+            }
+        }
+
+        return PSFS_PASS_ON;
     }
 
     #[StreamFilter('trim')]
@@ -51,18 +75,21 @@ class CsvFilterProcessor implements SplObserver, IStreamProcessor
         return PSFS_PASS_ON;
     }
 
-    public function registerFilters(): void
+    #[StreamFilter('uppercase')]
+    public function uppercaseFilter($in, $out, &$consumed, $closing): int
     {
-        $reflection = new ReflectionClass($this);
-        foreach ($reflection->getMethods() as $method) {
-            $attributes = $method->getAttributes(StreamFilter::class);
-            if ($attributes) {
-                $attr = $attributes[0]->newInstance();
-                $this->registry()->register(
-                    $attr->name,
-                    fn ($in, $out, &$consumed, $closing) => $this->{$method->name}($in, $out, $consumed, $closing)
-                );
-            }
+        while ($bucket = stream_bucket_make_writeable($in)) {
+            $bucket->data = strtoupper($bucket->data);
+            $consumed += $bucket->datalen;
+            stream_bucket_append($out, $bucket);
         }
+        return PSFS_PASS_ON;
+    }
+
+    public function withHeaders(array $headers): static
+    {
+        $this->headers = $headers;
+
+        return $this;
     }
 }

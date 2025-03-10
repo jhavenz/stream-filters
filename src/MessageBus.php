@@ -11,6 +11,8 @@ class MessageBus implements SplSubject
 {
     private mixed $data = null;
     private ?string $message = null;
+
+    /** @var SplObserver[] */
     private array $observers = [];
 
     public function attach(SplObserver $observer): void

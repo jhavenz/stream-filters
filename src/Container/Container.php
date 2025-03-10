@@ -9,6 +9,7 @@ use Illuminate\Contracts\Container\Container as IlluminateContainer;
 use Illuminate\Process\Factory as ProcessFactory;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Traits\ForwardsCalls;
+use Jhavens\StreamFilters\Csv\CsvFilterProcessor;
 use Jhavens\StreamFilters\CustomStreamFilter;
 use Jhavens\StreamFilters\IStreamProcessor;
 use Jhavens\StreamFilters\MessageBus;
@@ -84,6 +85,7 @@ class Container implements ArrayAccess, ContainerInterface
     private function setBindings(): void
     {
         $this->container->bindIf(ProcessFactory::class);
+        $this->container->bindIf(CsvFilterProcessor::class);
         $this->container->bindIf(CustomStreamFilter::class);
         $this->container->bindIf(WebSocketProcessor::class);
 
@@ -91,20 +93,20 @@ class Container implements ArrayAccess, ContainerInterface
         $this->container->scopedIf(SimpleJsonRouter::class);
         $this->container->scopedIf(StreamFilterRegistry::class);
 
-        $this->container->afterResolving(IStreamProcessor::class, function (IStreamProcessor $filter, Container $ioc) {
-            $reflection = new ReflectionClass($this);
+        $this->container->afterResolving(IStreamProcessor::class, function (IStreamProcessor $filter, ContainerInterface $ioc) {
+            $reflection = new ReflectionClass($filter);
 
             foreach ($reflection->getMethods() as $method) {
                 $attributes = $method->getAttributes(StreamFilter::class);
 
                 if ($attributes) {
-                    $registry = $ioc->make(StreamFilterRegistry::class);
+                    $registry = $ioc->get(StreamFilterRegistry::class);
 
                     $attr = $attributes[0]->newInstance();
 
                     $registry->register(
                         $attr->name,
-                        fn ($in, $out, &$consumed, $closing) => $this->{$method->name}($in, $out, $consumed, $closing)
+                        fn ($in, $out, &$consumed, $closing) => $filter->{$method->name}($in, $out, $consumed, $closing)
                     );
                 }
             }
