@@ -4,38 +4,56 @@ declare(strict_types=1);
 
 namespace Jhavens\Streamfilters\Filters\WebSockets;
 
-use Jhavens\Streamfilters\Streams\StreamFilterRegistry;
+use Jhavens\Streamfilters\Filters\FilterProcessor;
+use RuntimeException;
 
 class WebSocketProcessor
 {
-    public function __construct(
-        private readonly StreamFilterRegistry $registry,
-    ) {
-    }
+    use FilterProcessor;
 
-    public function processMessage(string $message, array $filterNames): string
+    /**
+     * Process WebSocket messages with filters and route them.
+     *
+     * @param string $wsUrl WebSocket server URL
+     * @param array $filterNames Filters to apply to incoming messages
+     * @param callable|null $defaultHandler Fallback handler for unrouted messages
+     * @return void
+     */
+    public function process(string $wsUrl, array $filterNames, ?callable $defaultHandler = null): void
     {
-        $input = fopen('php://memory', 'r+');
-        $output = fopen('php://memory', 'r+');
-        fwrite($input, $message);
-        rewind($input);
-
-        foreach ($filterNames as $name) {
-            $this->registry->apply($name, $input);
+        // Placeholder for stream opening (replace with WebSocket stream wrapper later)
+        $stream = fopen($wsUrl, 'r+'); // Assume websocket:// protocol once implemented
+        if ($stream === false) {
+            throw new RuntimeException("Failed to open WebSocket stream: $wsUrl");
         }
 
-        while (!feof($input)) {
-            $data = fread($input, 8192);
-            if ($data !== false) {
-                fwrite($output, $data);
+        // Apply filters
+        foreach ($filterNames as $name) {
+            $this->registry()->apply($name, $stream);
+        }
+
+        // Process messages
+        while (!feof($stream)) {
+            $data = fread($stream, 8192);
+            if ($data !== false && strlen($data) > 0) {
+                if (!$this->router()->dispatch($data) && $defaultHandler !== null) {
+                    $defaultHandler($data); // Handle unrouted messages
+                }
             }
         }
 
-        rewind($output);
-        $result = stream_get_contents($output);
+        fclose($stream);
+    }
 
-        fclose($input);
-        fclose($output);
-        return $result;
+    /**
+     * Send a message through the WebSocket stream.
+     *
+     * @param resource $stream WebSocket stream
+     * @param string $message Message to send
+     * @return void
+     */
+    public function sendMessage($stream, string $message): void
+    {
+        fwrite($stream, $message);
     }
 }

@@ -23,9 +23,9 @@ class ConcurrentCsvProcessorTest extends TestCase
         $processor->process($inputFile, $outputFile, ['trim']);
 
         $expectedFileContent = "name,age,city
-Alice,30,New York
-Bob,25,Los Angeles
-";
+        Alice,30,New York
+        Bob,25,Los Angeles
+        ";
 
         Assert::assertStringEqualsFileCanonicalizing(
             $outputFile,
@@ -47,5 +47,19 @@ Bob,25,Los Angeles
 
         $expected = "name,age,city\nAlice,30,New York\nBob,25,Los Angeles\n";
         Assert::assertStringEqualsFileCanonicalizing($outputFile, $expected);
+    }
+
+    #[Test]
+    public function it_processes_input_from_multiple_csvs ()
+    {
+        $processor = $this->app[ConcurrentCsvProcessor::class];
+
+        $processor->process(
+            [$this->csvPath('input1.csv'), $this->csvPath('input2.csv')],
+            $this->csvPath('output.csv'),
+            ['trim', 'uppercase']
+        );
+
+        dump(file_get_contents($this->csvPath('output.csv')));
     }
 }

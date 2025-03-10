@@ -6,10 +6,14 @@ namespace Jhavens\Streamfilters\Container;
 
 use ArrayAccess;
 use Illuminate\Contracts\Container\Container as IlluminateContainer;
+use Illuminate\Process\Factory as ProcessFactory;
+use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\Traits\ForwardsCalls;
 use Jhavens\Streamfilters\Filters\CustomStreamFilter;
 use Jhavens\Streamfilters\Filters\MessageBus;
 use Jhavens\Streamfilters\Filters\WebSockets\WebSocketProcessor;
+use Jhavens\Streamfilters\Filters\WebSockets\WebSocketStreamWrapper;
+use Jhavens\Streamfilters\Routing\SimpleJsonRouter;
 use Jhavens\Streamfilters\Streams\StreamFilterRegistry;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Filesystem\Path;
@@ -35,15 +39,20 @@ class Container implements ArrayAccess, ContainerInterface
             $illuminateContainer->instance('path', $basePath);
         }
 
-        if ($illuminateContainer->bound(static::class)) {
-            return $illuminateContainer->make(static::class);
+        if (!$illuminateContainer->bound(static::class)) {
+            $self = new static($illuminateContainer);
+
+            $illuminateContainer->instance(static::class, $self);
+
+            if (!Facade::getFacadeApplication()) {
+                /** @noinspection PhpParamsInspection */
+                Facade::setFacadeApplication($self);
+            }
+
+            $self->registerStreamWrappers();
         }
 
-        $self = new static($illuminateContainer);
-
-        $illuminateContainer->instance(static::class, $self);
-
-        return $self;
+        return $illuminateContainer->make(static::class);
     }
 
     public function basePath(string ...$segments): string
@@ -71,10 +80,12 @@ class Container implements ArrayAccess, ContainerInterface
 
     private function setBindings(): void
     {
+        $this->container->bindIf(ProcessFactory::class);
         $this->container->bindIf(CustomStreamFilter::class);
         $this->container->bindIf(WebSocketProcessor::class);
 
         $this->container->scopedIf(MessageBus::class);
+        $this->container->scopedIf(SimpleJsonRouter::class);
         $this->container->scopedIf(StreamFilterRegistry::class);
     }
 
@@ -111,5 +122,10 @@ class Container implements ArrayAccess, ContainerInterface
     public function __call(string $name, array $arguments)
     {
         return $this->forwardDecoratedCallTo($this->container, $name, $arguments);
+    }
+
+    private function registerStreamWrappers(): void
+    {
+        WebSocketStreamWrapper::register();
     }
 }

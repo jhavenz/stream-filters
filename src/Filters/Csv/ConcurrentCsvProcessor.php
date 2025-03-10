@@ -8,37 +8,69 @@ use RuntimeException;
 
 class ConcurrentCsvProcessor extends CsvFilterProcessor
 {
-    public function process(string $inputFile, string $outputFile, array $filterNames): void
+    public function process(array $inputFiles, string $outputFile, array $filterNames): void
     {
-        $input = fopen($inputFile, 'r');
+        // Open the output stream
         $output = fopen($outputFile, 'w');
-        stream_set_blocking($input, false);
-
-        foreach ($filterNames as $name) {
-            $this->registry()->apply($name, $input);
+        if ($output === false) {
+            throw new RuntimeException("Failed to open output file: $outputFile");
         }
 
-        $chunkSize = 8192;
-        $streams = [$input];
+        // Open all input streams and set them to non-blocking
+        $inputs = array_map(function ($file) {
+            $stream = fopen($file, 'r');
+            if ($stream === false) {
+                throw new RuntimeException("Failed to open input file: $file");
+            }
+            stream_set_blocking($stream, false);
+            return $stream;
+        }, $inputFiles);
+
+        // Apply filters to each input stream
+        foreach ($filterNames as $name) {
+            foreach ($inputs as $input) {
+                $this->registry()->apply($name, $input);
+            }
+        }
+
+        $streams = $inputs;
         $write = [$output];
         $except = [];
 
-        while (!feof($input)) {
+        // Process streams until all are exhausted
+        while (!empty($streams)) {
             $readable = $streams;
             $writable = $write;
-            if (stream_select($readable, $writable, $except, 0, 200000) === false) {
-                throw new RuntimeException('Stream select failed');
+            $result = stream_select($readable, $writable, $except, 0, 200000); // 200ms timeout
+
+            if ($result === false) {
+                $this->closeStreams($inputs, $output);
+                throw new RuntimeException('stream_select failed');
             }
 
             foreach ($readable as $stream) {
-                $data = fread($stream, $chunkSize);
-                if ($data !== false && strlen($data) > 0) {
-                    fwrite($output, $data);
+                $data = fread($stream, 8192);
+                if ($data === false || strlen($data) === 0) {
+                    fclose($stream);
+                    $streams = array_filter($streams, fn($s) => $s !== $stream);
+                    continue;
                 }
+                fwrite($output, $data);
             }
         }
 
-        fclose($input);
-        fclose($output);
+        $this->closeStreams($inputs, $output);
+    }
+
+    private function closeStreams(array $inputs, $output): void
+    {
+        foreach ($inputs as $stream) {
+            if (is_resource($stream)) {
+                fclose($stream);
+            }
+        }
+        if (is_resource($output)) {
+            fclose($output);
+        }
     }
 }

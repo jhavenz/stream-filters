@@ -4,22 +4,20 @@ declare(strict_types=1);
 
 namespace Jhavens\Streamfilters\Filters\Csv;
 
-use Jhavens\Streamfilters\Filters\MessageBus;
+use Jhavens\Streamfilters\Filters\FilterProcessor;
 use Jhavens\Streamfilters\PhpAttributes\StreamFilter;
-use Jhavens\Streamfilters\Streams\StreamFilterRegistry;
 use ReflectionClass;
 use SplObserver;
 
 class CsvFilterProcessor implements SplObserver
 {
+    use FilterProcessor;
+
     private string $trimChars = " \t\n\r\0\x0B"; // Default trim characters
 
     public function __construct(
-        private readonly StreamFilterRegistry $registry,
-        private readonly MessageBus $messageBus,
     ) {
-        $this->messageBus->attach($this); // Register as observer
-        $this->registerFilters();
+        $this->messageBus()->attach($this);
     }
 
     public function update(\SplSubject $subject): void
@@ -33,18 +31,22 @@ class CsvFilterProcessor implements SplObserver
     public function trimFilter($in, $out, &$consumed, $closing): int
     {
         while ($bucket = stream_bucket_make_writeable($in)) {
-            $data = array_map(fn($cell) => trim($cell, $this->trimChars), str_getcsv($bucket->data, escape: "\\"));
-            $bucket->data = implode(',', $data) . "\n";
+            $data = $bucket->data;
+
+            // Check for pattern and trigger message
+            $this->messageBus()->triggerOnPattern(
+                '/^SPECIAL,/',
+                fn($bus) => $bus->send('change_trim_chars', ','),
+                $data
+            );
+
+            $rows = array_map(fn($row) => trim($row, $this->trimChars), str_getcsv($data, escape: "\\"));
+            $bucket->data = implode(',', $rows) . "\n";
             $consumed += $bucket->datalen;
             stream_bucket_append($out, $bucket);
         }
 
         return PSFS_PASS_ON;
-    }
-
-    public function registry(): StreamFilterRegistry
-    {
-        return $this->registry;
     }
 
     private function registerFilters(): void
@@ -54,7 +56,7 @@ class CsvFilterProcessor implements SplObserver
             $attributes = $method->getAttributes(StreamFilter::class);
             if ($attributes) {
                 $attr = $attributes[0]->newInstance();
-                $this->registry->register(
+                $this->registry()->register(
                     $attr->name,
                     fn ($in, $out, &$consumed, $closing) => $this->{$method->name}($in, $out, $consumed, $closing)
                 );

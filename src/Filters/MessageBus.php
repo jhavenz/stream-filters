@@ -15,15 +15,12 @@ class MessageBus implements SplSubject
 
     public function attach(SplObserver $observer): void
     {
-        $this->observers[] = $observer;
+        $this->observers[spl_object_hash($observer)] = $observer;
     }
 
     public function detach(SplObserver $observer): void
     {
-        $key = array_search($observer, $this->observers, true);
-        if ($key !== false) {
-            unset($this->observers[$key]);
-        }
+        unset($this->observers[spl_object_hash($observer)]);
     }
 
     public function notify(): void
@@ -48,5 +45,12 @@ class MessageBus implements SplSubject
     public function getData(): mixed
     {
         return $this->data;
+    }
+
+    public function triggerOnPattern(string $pattern, callable $callback, string $streamData): void
+    {
+        if (preg_match($pattern, $streamData)) {
+            $callback($this);
+        }
     }
 }

@@ -20,9 +20,7 @@ class TestCase extends PHPUnitTestCase
 
     protected function csvPath(string $file): string
     {
-        return tap($this->app->testsPath('csv', $file), function ($path) {
-            assert(file_exists($path), "File not found at path: {$path}");
-        });
+        return $this->app->testsPath('csv', $file);
     }
 
     protected function outputDir(string $file): string

@@ -2,6 +2,9 @@
     "name": "jhavens/streamfilters",
     "type": "library",
     "version": "0.1.0",
+    "scripts": {
+        "websocket_routing": "@php ./examples/websocket_routing.php"
+    },
     "autoload": {
         "psr-4": {
             "Jhavens\\Streamfilters\\": "src/"
@@ -23,11 +26,13 @@
         "illuminate/support": "^12.1",
         "illuminate/process": "^12.1",
         "illuminate/container": "^12.1",
-        "symfony/filesystem": "^7.2"
+        "symfony/filesystem": "^7.2",
+        "cboden/ratchet": "^0.4.4"
     },
     "require-dev": {
         "symfony/var-dumper": "^7.2",
         "spatie/ray": "^1.41",
-        "phpunit/phpunit": "^12.0"
+        "phpunit/phpunit": "^12.0",
+        "rector/swiss-knife": "*"
     }
 }

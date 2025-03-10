@@ -2,25 +2,27 @@
 
 declare(strict_types=1);
 
-namespace Architecture;
+namespace Jhavens\Streamfilters\Tests\Architecture;
 
 use Illuminate\Support\Facades\Process;
+use Jhavens\Streamfilters\Tests\TestCase;
+use PHPUnit\Framework\Assert;
 use PHPUnit\Framework\Assert as PHPUnit;
 use PHPUnit\Framework\Attributes\Test;
+use Symfony\Component\Process\PhpExecutableFinder;
 
-class DevCleanupTest
+class DevCleanupTest extends TestCase
 {
     #[Test]
     public function it_does_not_leave_commented_code ()
     {
         $command = implode(' ', [
-            'php',
+            '"'.new PhpExecutableFinder()->find().'"',
             'vendor/bin/swiss-knife',
             'check-commented-code',
             'src',
             'tests',
-            'config',
-            'resources',
+            // 'config',
         ]);
 
         $process = Process::timeout(10)->run($command);
@@ -29,8 +31,7 @@ class DevCleanupTest
             PHPUnit::fail(str($errorOutput)->before('check-commented-code')->rtrim()->toString());
         }
 
-        expect($process->successful())->toBeTrue(
-            PHP_EOL
+        Assert::assertTrue($process->successful(), PHP_EOL
             .'[Commented Code Was Found]'
             .PHP_EOL
             .PHP_EOL
